@@ -1,0 +1,9 @@
+				RewriteEngine On
+				RewriteRule ^b/(.+) /index.php?p=88&b=$1&t=b [NC,QSA]
+				RewriteRule ^s/(.+) /index.php?p=88&b=$1&t=s [NC,QSA]
+				RewriteRule ^mp/(.+) /index.php?p=89&m=$1 [NC,QSA]
+				RewriteRule ^u/(.+) /index.php?u=$1 [NC,QSA]
+				RewriteRule ^doc/(.+) /index.php?p=16&id=$1 [NC,QSA]
+				RewriteRule ^support /index.php?p=34 [NC,QSA]
+				RewriteRule ^beatmaplist /index.php?p=32 [NC,QSA]
+				RewriteRule ^leaderboard /index.php?p=13 [NC,QSA]
