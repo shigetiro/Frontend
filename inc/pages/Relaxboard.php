@@ -1,6 +1,6 @@
 <?php
 
-class Leaderboard {
+class Relaxboard {
 	const PageID = 14;
 	const URL = 'relaxboard';
 	const Title = 'Vipsu - Relaxboard';
@@ -11,7 +11,7 @@ class Leaderboard {
 		P::MaintenanceStuff();
 
 		global $ScoresConfig;
-		echo "<h2>Leaderboard</h2>";
+		echo "<h2>Relax Leaderboard</h2>";
 		// Leaderboard names (to bold the selected mode)
 		$modesText = [0 => 'osu!standard', 1 => 'Taiko', 2 => 'Catch the Beat', 3 => 'osu!mania'];
 		// Set $m value to 0 if not set
@@ -28,10 +28,7 @@ class Leaderboard {
 		// Bold the selected mode
 		$modesText[$m] = '<b>'.$modesText[$m].'</b>';
 		// PP or Score ranking
-		if  ($ScoresConfig["enablePP"] && ($m == 1 || $m == 0 || $m == 3))
-			$scoringName = "PP";
-		else
-			$scoringName = "Score";
+		$scoringName = "PP";
 		echo '<a href="?m=0">'.$modesText[0].'</a> | <a href="?m=1">'.$modesText[1].'</a> | <a href="?m=2">'.$modesText[2].'</a> | <a href="?m=3">'.$modesText[3].'</a>';
 
 		// paginate: generate db offset
@@ -41,18 +38,18 @@ class Leaderboard {
 		$offset = ($p-1) * 50;
 
 		// generate table name
-		$tb = 'leaderboard_'.$modeForDB;
+		$tb = 'relaxboard_'.$modeForDB;
 		// Get all user data and order them by score
 		$leaderboard = $GLOBALS['db']->fetchAll("
 SELECT
 	$tb.*,
-	users.username, users_stats.country,
-	users_stats.ranked_score_" . $modeForDB . ", users_stats.pp_" . $modeForDB . ",
-	users_stats.avg_accuracy_" . $modeForDB . ", users_stats.playcount_" . $modeForDB . ",
-	users_stats.level_" . $modeForDB . ", users_stats.id
+	rx.username, rx_stats.country,
+	rx_stats.ranked_score_" . $modeForDB . ", rx_stats.pp_" . $modeForDB . ",
+	rx_stats.avg_accuracy_" . $modeForDB . ", rx_stats.playcount_" . $modeForDB . ",
+	rx_stats.level_" . $modeForDB . ", rx_stats.id
 FROM $tb
 INNER JOIN users ON users.id=$tb.user
-INNER JOIN users_stats ON users_stats.id=$tb.user
+INNER JOIN rx_stats ON rx_stats.id=$tb.user
 WHERE users.privileges & 1 > 0
 ORDER BY $tb.v DESC
 LIMIT $offset, 50;");
@@ -112,7 +109,7 @@ LIMIT $offset, 50;");
 	}
 
 	public static function GetUserRank($u, $mode) {
-		$query = $GLOBALS['db']->fetch("SELECT position FROM leaderboard_$mode WHERE user = ?;", [$u]);
+		$query = $GLOBALS['db']->fetch("SELECT position FROM relaxboard_$mode WHERE user = ?;", [$u]);
 		if ($query !== false) {
 			$rank = (string) current($query);
 		} else {
@@ -161,17 +158,17 @@ LIMIT $offset, 50;");
 
 	public static function Update($userID, $newScore, $mode) {
 		// Who are we?
-		$us = $GLOBALS['db']->fetch("SELECT * FROM leaderboard_$mode WHERE user = ?", [$userID]);
+		$us = $GLOBALS['db']->fetch("SELECT * FROM relaxboard_$mode WHERE user = ?", [$userID]);
 		$newplayer = false;
 		if (!$us) {
 			$newplayer = true;
 		}
 		// Find player who is right below our score
-		$target = $GLOBALS['db']->fetch("SELECT * FROM leaderboard_$mode WHERE v <= ? ORDER BY position ASC LIMIT 1", [$newScore]);
+		$target = $GLOBALS['db']->fetch("SELECT * FROM relaxboard_$mode WHERE v <= ? ORDER BY position ASC LIMIT 1", [$newScore]);
 		$plus = 0;
 		if (!$target) {
 			// Wow, this user completely sucks at this game.
-			$target = $GLOBALS['db']->fetch("SELECT * FROM leaderboard_$mode ORDER BY position DESC LIMIT 1");
+			$target = $GLOBALS['db']->fetch("SELECT * FROM relaxboard_$mode ORDER BY position DESC LIMIT 1");
 			$plus = 1;
 		}
 		// Set $newT
@@ -185,12 +182,12 @@ LIMIT $offset, 50;");
 		}
 		// Make some place for the new "place holder".
 		if ($newplayer) {
-			$GLOBALS['db']->execute("UPDATE leaderboard_$mode SET position = position + 1 WHERE position >= ? ORDER BY position DESC", [$newT]);
+			$GLOBALS['db']->execute("UPDATE relaxboard_$mode SET position = position + 1 WHERE position >= ? ORDER BY position DESC", [$newT]);
 		} else {
-			$GLOBALS['db']->execute("DELETE FROM leaderboard_$mode WHERE user = ?", [$userID]);
-			$GLOBALS['db']->execute("UPDATE leaderboard_$mode SET position = position + 1 WHERE position < ? AND position >= ? ORDER BY position DESC", [$us['position'], $newT]);
+			$GLOBALS['db']->execute("DELETE FROM relaxboard_$mode WHERE user = ?", [$userID]);
+			$GLOBALS['db']->execute("UPDATE relaxboard_$mode SET position = position + 1 WHERE position < ? AND position >= ? ORDER BY position DESC", [$us['position'], $newT]);
 		}
 		// Finally, insert the user back.
-		$GLOBALS['db']->execute("INSERT INTO leaderboard_$mode (position, user, v) VALUES (?, ?, ?);", [$newT, $userID, $newScore]);
+		$GLOBALS['db']->execute("INSERT INTO relaxboard_$mode (position, user, v) VALUES (?, ?, ?);", [$newT, $userID, $newScore]);
 	}
 }
